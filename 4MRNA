@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
-SCRIPT_DIR="$(dirname "$(realpath "$0")")"
-share_dir="$HOME/.local/share/4MRNA"
-bash "$share_dir/Codes/4MRNA.sh" "$@"
+set -euo pipefail
+SCRIPT_PATH="$HOME/4MRNA/4MRNA.sh"
+if [[ -x "$SCRIPT_PATH" ]]; then
+  exec bash "$SCRIPT_PATH" "$@"
+else
+  echo "4MRNA.sh not found. Please reinstall." >&2
+  exit 1
+fi
