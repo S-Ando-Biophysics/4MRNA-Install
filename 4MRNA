@@ -1,9 +1,92 @@
 #!/usr/bin/env bash
 set -euo pipefail
-SCRIPT_PATH="$HOME/4MRNA/4MRNA.sh"
-if [[ -x "$SCRIPT_PATH" ]]; then
-  exec bash "$SCRIPT_PATH" "$@"
-else
-  echo "4MRNA.sh not found. Please reinstall." >&2
+
+PREFIX="$HOME/4MRNA"
+MAIN="$PREFIX/4MRNA.sh"
+VER_FILE="$PREFIX/VERSION"
+INSTALL_DEST="$PREFIX/4MRNA-Install"
+INSTALL_REPO="https://github.com/S-Ando-Biophysics/4MRNA-Install"
+
+show_version() {
+  if [[ -r "$VER_FILE" ]]; then
+    printf "4MRNA %s\n" "$(cat "$VER_FILE")"
+  else
+    echo "4MRNA (version: unknown)"
+  fi
+}
+
+show_help() {
+  cat <<'USAGE'
+Usage: 4MRNA [options] [args]
+
+Commands:
+  version, -v, --version   Show 4MRNA version
+  help,    -h, --help      Show this help
+  setup                    Move downloaded files into $HOME/4MRNA/4MRNA-Install
+
+Instructions:
+  https://github.com/S-Ando-Biophysics/4MRNA
+
+Notes:
+  - The main script runs in the current working directory.
+  - It expects/creates 4MRNA-INP.txt there.
+USAGE
+}
+
+fetch_installer() {
+  echo "[4MRNA] Fetching installer into: $INSTALL_DEST"
+  rm -rf "$INSTALL_DEST"
+  mkdir -p "$INSTALL_DEST"
+
+  if command -v git >/dev/null 2>&1; then
+    git clone --depth=1 "$INSTALL_REPO".git "$INSTALL_DEST"
+    # make it a plain folder (no .git)
+    rm -rf "$INSTALL_DEST/.git"
+  else
+    tmpd="$(mktemp -d)"
+    curl -fsSL "$INSTALL_REPO/archive/refs/heads/main.tar.gz" | tar xz -C "$tmpd"
+    src="$(find "$tmpd" -maxdepth 1 -type d -name '4MRNA-Install-*' | head -n1 || true)"
+    if [[ -z "${src:-}" ]]; then
+      echo "Failed to retrieve installer archive." >&2
+      rm -rf "$tmpd"
+      exit 1
+    fi
+    cp -R "$src/"* "$INSTALL_DEST/"
+    rm -rf "$tmpd"
+  fi
+  echo "Setup Finished"
+}
+
+case "${1:-}" in
+  version|-v|--version)
+    show_version
+    exit 0
+    ;;
+  help|-h|--help)
+    show_help
+    exit 0
+    ;;
+  setup)
+    fetch_installer
+    exit 0
+    ;;
+esac
+
+if [[ ! -x "$MAIN" ]]; then
+  echo "4MRNA main script not found at: $MAIN" >&2
+  echo "Please run install.sh again." >&2
   exit 1
+fi
+
+if [[ $# -eq 0 ]]; then
+  read -rp "Run 4MRNA now? [Y/n] " ans
+  ans=${ans:-Y}
+  if [[ "$ans" =~ ^[Yy]$ ]]; then
+    exec bash "$MAIN"
+  else
+    echo "Cancelled."
+    exit 0
+  fi
+else
+  exec bash "$MAIN" "$@"
 fi
