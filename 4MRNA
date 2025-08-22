@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+share_dir="$HOME/.local/share/4MRNA"
+bash "$share_dir/Codes/4MRNA.sh" "$@"
