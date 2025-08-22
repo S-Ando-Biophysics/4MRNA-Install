@@ -29,6 +29,6 @@ rm -f "$TMP"
 install -m 0755 "$SCRIPT_DIR/4MRNA" "$BIN_DIR/4MRNA"
 
 echo "Install Finished"
-echo "(Add to PATH: export PATH=\"$HOME/4MRNA/bin:\$PATH\")"
+echo "(Add to PATH: export PATH=\"$BIN_DIR:\$PATH\")"
 echo "Try: 4MRNA version"
 
