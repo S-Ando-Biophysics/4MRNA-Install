@@ -4,7 +4,7 @@ set -euo pipefail
 ASSET_URL_LATEST="https://github.com/S-Ando-Biophysics/4MRNA/releases/latest/download/4MRNA.sh"
 TAG="${TAG:-}"
 
-PREFIX="$HOME/4MRNA"
+PREFIX="$HOME/4MRNA-Install"
 BIN_DIR="$PREFIX/bin"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
