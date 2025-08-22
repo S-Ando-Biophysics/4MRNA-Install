@@ -1,4 +1,8 @@
-# How to install 4MRNA
+# Install style of 4MRNA
+## Instructions
+The explanation is on the following site: https://github.com/S-Ando-Biophysics/4MRNA
+
+## How to install 4MRNA
 
     cd ~
     git clone https://github.com/S-Ando-Biophysics/4MRNA-Install.git
@@ -8,7 +12,7 @@
     4MRNA version
     4MRNA setup
 
-# How to install required python libraries
+## How to install required python libraries
 
     pip install pandas
     pip install playwright
