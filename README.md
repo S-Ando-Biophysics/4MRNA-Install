@@ -11,10 +11,3 @@ The explanation is on the following site: https://github.com/S-Ando-Biophysics/4
     ./install.sh
     echo 'export PATH="$HOME/4MRNA-Install/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc
     4MRNA version
-
-## How to install required python libraries
-
-    pip install pandas
-    pip install playwright
-    playwright install
-    playwright install-deps
