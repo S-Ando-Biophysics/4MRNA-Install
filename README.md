@@ -1,5 +1,5 @@
-# Install style of 4MRNA
-## Instructions
+# Installation of 4MRNA
+
 The explanation is on the following site: https://github.com/S-Ando-Biophysics/4MRNA
 
 ## How to install 4MRNA
