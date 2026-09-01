@@ -10,12 +10,16 @@ The 4MRNA itself is distributed under the MIT License.
 
 1. 3DNA
 - Official website: https://x3dna.org/
-- License: See below.
+- License: License information is available on the official website (https://x3dna.org/highlights/3dna-c-source-code-is-available).
 
-2. CCP4 / Phaser
+2. Phenix
+- Official website: https://phenix-online.org/
+- License: License information is available on the official website (https://phenix-online.org/license).
+
+3. CCP4 / Phaser
 - Official website (CCP4): https://www.ccp4.ac.uk/
 - Official website (Phaser): https://www.phaser.cimr.cam.ac.uk/index.php/Phaser_Crystallographic_Software
-- License: License information is available on their respective websites. They are available free of charge for academic users after signing the academic license agreement.
+- License: License information is available on their respective websites.
 - Note: CCP4/Phaser is not bundled with 4MRNA. Users must install CCP4 separately and comply with the CCP4/Phaser license terms. 
 
 --------------------------------------------------
