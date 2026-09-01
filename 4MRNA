@@ -1,25 +1,100 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+REPO_URL="https://github.com/S-Ando-Biophysics/4MRNA"
+LATEST_RELEASE_URL="${REPO_URL}/releases/latest"
+LATEST_SCRIPT_URL="${REPO_URL}/releases/latest/download/4MRNA.sh"
+CITATION_URL="https://raw.githubusercontent.com/S-Ando-Biophysics/4MRNA/main/CITATION.cff"
+
 PREFIX="$HOME/4MRNA-Install"
-MAIN="$PREFIX/4MRNA.sh"
-VER_FILE="$PREFIX/VERSION"
+TMP_DIR="${PREFIX}/tmp"
+
+mkdir -p "$TMP_DIR"
+
+get_latest_version() {
+  local final_url
+
+  final_url="$(
+    curl -fsSLI -o /dev/null -w '%{url_effective}' "$LATEST_RELEASE_URL"
+  )" || {
+    echo "Error: Failed to determine the latest 4MRNA release." >&2
+    exit 1
+  }
+
+  printf '%s\n' "${final_url##*/}"
+}
+
+download_script() {
+  local version="$1"
+  local out="$2"
+  local url
+
+  if [[ "$version" == "latest" ]]; then
+    url="$LATEST_SCRIPT_URL"
+  else
+    url="${REPO_URL}/releases/download/${version}/4MRNA.sh"
+  fi
+
+  curl -fsSL "$url" -o "$out" || {
+    echo "Error: Failed to download 4MRNA ${version}." >&2
+    echo "Please check that the specified version exists." >&2
+    exit 1
+  }
+
+  chmod +x "$out"
+}
+
+write_information_file() {
+  local version="$1"
+  local info_file="${PWD}/4MRNA-Information.txt"
+  local citation_tmp
+
+  citation_tmp="$(mktemp "${TMP_DIR}/citation.XXXXXX")"
+
+  {
+    echo "4MRNA Version: ${version}"
+    echo
+    echo "Citation information:"
+    echo
+  } > "$info_file"
+
+  if curl -fsSL "$CITATION_URL" -o "$citation_tmp"; then
+    cat "$citation_tmp" >> "$info_file"
+  else
+    echo "Warning: CITATION.cff could not be retrieved." >> "$info_file"
+    echo "Warning: Failed to retrieve CITATION.cff. Continuing without citation details." >&2
+  fi
+
+  rm -f "$citation_tmp"
+
+  echo "[4MRNA] Information written to: $info_file"
+}
 
 show_version() {
-  if [[ -r "$VER_FILE" ]]; then
-    printf "4MRNA %s\n" "$(cat "$VER_FILE")"
-  else
-    echo "4MRNA (version: unknown)"
-  fi
+  local version
+  version="$(get_latest_version)"
+  printf "4MRNA %s\n" "$version"
 }
 
 show_help() {
   cat <<'USAGE'
-Usage: 4MRNA [options] [args]
+Usage:
+  4MRNA
+  4MRNA --release VERSION
+  4MRNA -r VERSION
+  4MRNA version
+  4MRNA --version
 
-Commands:
-  version, -v, --version   Show 4MRNA version
-  help,    -h, --help      Show this help
+Options:
+  -r, --release VERSION    Run a specific 4MRNA release
+  -v, --version            Show the latest 4MRNA version
+  -h, --help               Show this help
+
+Examples:
+  4MRNA
+  4MRNA --release v2.4.0
+  4MRNA -r v2.4.0
+  4MRNA --version
 
 Instructions:
   https://github.com/S-Ando-Biophysics/4MRNA
@@ -27,32 +102,66 @@ Instructions:
 USAGE
 }
 
-case "${1:-}" in
-  version|-v|--version)
-    show_version
-    exit 0
-    ;;
-  help|-h|--help)
-    show_help
-    exit 0
-    ;;
-esac
+requested_version="latest"
+declare -a pass_args=()
 
-if [[ ! -x "$MAIN" ]]; then
-  echo "4MRNA main script not found at: $MAIN" >&2
-  echo "Please run install.sh again." >&2
-  exit 1
-fi
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -r|--release)
+      if [[ $# -lt 2 ]]; then
+        echo "Error: $1 requires a version, e.g. v2.3." >&2
+        exit 1
+      fi
+      requested_version="$2"
+      shift 2
+      ;;
 
-if [[ $# -eq 0 ]]; then
-  read -rp "Run 4MRNA now? [Y/n] " ans
-  ans=${ans:-Y}
-  if [[ "$ans" =~ ^[Yy]$ ]]; then
-    exec bash "$MAIN"
-  else
-    echo "Cancelled."
-    exit 0
-  fi
+    version|-v|--version)
+      show_version
+      exit 0
+      ;;
+
+    help|-h|--help)
+      show_help
+      exit 0
+      ;;
+
+    *)
+      pass_args+=("$1")
+      shift
+      ;;
+  esac
+done
+
+if [[ "$requested_version" == "latest" ]]; then
+  version="$(get_latest_version)"
 else
-  exec bash "$MAIN" "$@"
+  version="$requested_version"
 fi
+
+read -rp "Do you want to run 4MRNA (${version}) now? [Y/n] " ans
+ans=${ans:-Y}
+
+if [[ ! "$ans" =~ ^[Yy]$ ]]; then
+  echo "Cancelled."
+  exit 0
+fi
+
+write_information_file "$version"
+
+tmp_script="$(mktemp "${TMP_DIR}/4MRNA.XXXXXX.sh")"
+
+cleanup() {
+  rm -f "$tmp_script"
+}
+trap cleanup EXIT
+
+echo "[4MRNA] Downloading release ${version}..."
+
+if [[ "$requested_version" == "latest" ]]; then
+  download_script "latest" "$tmp_script"
+else
+  download_script "$requested_version" "$tmp_script"
+fi
+
+bash "$tmp_script" "${pass_args[@]}"
